@@ -38,6 +38,8 @@ __all__ = (
     "UUID",
     "ValidationError",
     "StopValidation",
+    "Invert",
+    "invert"
 )
 
 
@@ -661,6 +663,36 @@ class HostnameValidation:
         return True
 
 
+class Invert(object):
+    """
+    Accepts any other validator and raises a ValidationError if the
+    provided validator does not, inverting the result.
+
+    :param validator:
+        Any other valid WTForms validator that raises and error when it fails.
+    :param message:
+        Error message to raise in case of no validation error.
+    """
+
+    def __init__(self, validator, message=None):
+        self.validator = validator
+        self.message = message
+
+    def __call__(self, form, field, message=None):
+        try:
+            self.validator(form, field)
+        except ValidationError:
+            return
+
+        if message is None:
+            if self.message is None:
+                message = field.gettext('Invalid input.')
+            else:
+                message = self.message
+
+        raise ValidationError(message)
+
+
 email = Email
 equal_to = EqualTo
 ip_address = IPAddress
@@ -674,3 +706,4 @@ regexp = Regexp
 url = URL
 any_of = AnyOf
 none_of = NoneOf
+invert = Invert
